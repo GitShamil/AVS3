@@ -6,9 +6,8 @@ main.c
 3) -96[rbp] = argv[0]
 4) -80[rbp] = argv[2]
 4) -72[rbp] = argv[3]
-4) -4[rbp] = i
-5) -24[rbp] = input
-6) -8[rbp] = length
+5) -4[rbp] = i
+6) -24[rbp] = input
 7) -48[rbp] = begin
 8) -56[rbp] = end
 9) -64[rbp] = time_spent
@@ -33,8 +32,9 @@ countExp.s
 У программы есть 3 режима работы через консоль
 1) ./answer.exe           (- это запуск без параметров argv[1] и тогда будет ввод и вывод в консоль
 2) ./answer.exe 1         (- argv[1] = 1 тогда будут данные браться из файла input.txt и класться в output.txt
+2.1) ./answer.exe 1 name.txt (- argv[1] = 1 and argv[2] = "name.txt" then data would be got from name.txt and put to ouput.txt)
+2.2) ./answer.exe 1 name.txt name2.txt (- argv[1] = 1 and argv[2] = "name.txt" then data would be got from name.txt and put to name2.txt)
 3) ./answer.exe 2         (- argv[1] = 2 рандомный ввод и вывод в консоль
-в конце ввода строке нажмите enter + ctrl + d для ввода символа окончания потока
 Компилировал в ассемблер с такими параметрами
 gcc -masm=intel \
     -fno-asynchronous-unwind-tables \
@@ -45,11 +45,14 @@ gcc -masm=intel \
     -S -o ./code.s
 
 
+# 4. результаты тестов.
+![image](https://user-images.githubusercontent.com/113286731/201534430-b5fe28a9-3cdd-4ccc-ac15-b6c7c121f640.png)
+
 # 3. рефакторниг
 1) удалил бесполезную часть с конца файла
 2) убрал бесполезную работу когда сначала кладут в rax потом в rsi из rax, я стал класть сразу в rax
 3) во время больших циклов клал i,j,h в регистры вместо того чтобы каждый раз дергать из стека
-main.s
+main.s. I started take data from registres for improving productivity.
 1. r12d = i.       (-4[rbp] in main)
 countexp.s
 2. xmm3 = 1.0  
@@ -57,6 +60,13 @@ countexp.s
 4. xmm5 = accuracy
 5. xmm6 = exp
 6. xmm7 = fact
-это улучшило производительность в 2 раза примерно. То есть я использовал регистры вместо обращения к стеку как нужндо для 6 баллов.
+это улучшило производительность.
 4) убрал бесполезные строки когда в регистр записывается значение которое там уже было и не могло измениться
-5) оптимизировал цикл вычисление массива B достаточн сильно. Вместо 11 раз когда мы берем A[j] или A[j-1] в условиях, я их клал в rbx и тем самым дергал стек 3 раза вместо 11, что уменьшило время.
+
+
+оптимизационные функция для размера
+gcc -masm=intel     -fno-asynchronous-unwind-tables     -fno-jump-tables     -fno-stack-protector     -fno-exceptions             -ffunction-sections -Wl,--gc-sections -Os -ffunction-sections -Wl,--gc-sections -fno-asynchronous-unwind-tables  -ffunction-sections -Wl,--gc-sections -fno-asynchronous-unwind-tables -Wl,--strip-all  ./name.c     -S -o ./name.s
+
+
+отимизационные функции для скорости
+gcc -masm=intel     -fno-asynchronous-unwind-tables     -fno-jump-tables     -fno-stack-protector     -fno-exceptions            -m64 -Ofast -flto -march=native -funroll-loops   ./name.c     -S -o ./name.s
